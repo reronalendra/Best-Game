@@ -12,6 +12,7 @@ import { createRandom } from './random.js';
 import { createWorld, EVENT_HIT, EVENT_KILL, EVENT_NOVA, EVENT_OVER, EVENT_PICKUP, EVENT_WAVE_CLEAR, EVENT_WIN } from './world.js';
 import { ACTION_CONFIRM, ACTION_DASH, ACTION_MUTE, ACTION_NOVA, ACTION_PAUSE, createInput } from './input.js';
 import { createAudio } from './audio.js';
+import { createAssets } from './assets.js';
 import { createParticles } from './particles.js';
 import { createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE, SCREEN_UPGRADE, SCREEN_WIN } from './render.js';
 import { stageShot } from './shots.js';
@@ -29,7 +30,8 @@ const canvas = document.getElementById('game');
 const status = document.getElementById('status');
 const world = createWorld(createRandom(seed));
 const particles = createParticles();
-const renderer = createRenderer(canvas, particles);
+const assets = createAssets();
+const renderer = createRenderer(canvas, particles, assets);
 const audio = createAudio();
 
 function readBest() {
@@ -42,8 +44,11 @@ function saveBest(value) {
   catch { /* Storage can be off: the best score then lasts this visit only. */ }
 }
 
-function runShot(name) {
+async function runShot(name) {
   const scene = stageShot(name, world);
+  // Screenshots must show the real sprites, so wait for the PNG assets
+  // (local files) before painting the frame.
+  try { await assets.loadAll(); } catch { /* renderer falls back to shapes */ }
   let painted = 0;
   function paint() {
     renderer.draw(world.state, scene.screen, scene.best, 1.2, false);
@@ -56,6 +61,7 @@ function runShot(name) {
 
 function runGame() {
   const input = createInput(canvas);
+  assets.loadAll();
   let screen = SCREEN_TITLE;
   let best = readBest();
   let accumulator = 0;
@@ -63,6 +69,8 @@ function runGame() {
   let time = 0;
   let pendingDash = false;
   let pendingNova = false;
+  // Freeze frames (hitstop): a short real-time pause after big hits.
+  let freezeLeft = 0;
 
   function announce(message) { status.textContent = message; }
 
@@ -141,18 +149,27 @@ function runGame() {
     pendingDash = false;
     pendingNova = false;
     const events = world.step(STEP, input.move(), input.aim, input.firing, dash, nova);
+    // Dash trail: a fading afterimage while the dash is active.
+    if (world.state.player.dashLeft > 0) {
+      particles.trail(world.state.player.x, world.state.player.y, '#ffd166');
+    }
     if (world.state.player.hp < hpBefore) audio.hurt();
     if (world.state.kills > killsBefore) {
       audio.kill();
       const kill = world.state.lastKill;
       if (kill) {
         particles.burst(kill.x, kill.y, kill.kind === 'warden' ? '#c084fc' : '#b388ff', 14, 180);
+        // Light sparks fly home to the keeper on every kill.
+        particles.seekBurst(kill.x, kill.y, world.state.player.x, world.state.player.y, '#ffe08a', 6);
         particles.popup(kill.x, kill.y, `+${world.state.combo > 1 ? 'combo ' : ''}${50}`);
+        // Freeze frame on the big kills only: Brute and the Warden.
+        if (kill.kind === 'brute' || kill.kind === 'warden') freezeLeft = 0.1;
       }
     }
     if (world.state.player.embers > embersBefore) audio.pickup();
     if (events & EVENT_NOVA) {
       audio.nova();
+      freezeLeft = Math.max(freezeLeft, 0.05);
       particles.burst(world.state.player.x, world.state.player.y, '#fde68a', 40, 320);
     }
     if (events & EVENT_HIT && world.state.player.hp === hpBefore) { /* bolt hit a foe */ }
@@ -166,8 +183,17 @@ function runGame() {
 
   function frame(now) {
     requestAnimationFrame(frame);
-    accumulator += Math.min((now - last) / 1000, MAX_FRAME);
+    const realDt = Math.min((now - last) / 1000, MAX_FRAME);
     last = now;
+    // During a freeze frame the world does not advance, but the frame is
+    // still drawn, so the hit lands visually before time resumes.
+    if (freezeLeft > 0) {
+      freezeLeft -= realDt;
+      particles.step(STEP);
+      renderer.draw(world.state, screen, best, time, audio.muted);
+      return;
+    }
+    accumulator += realDt;
     time += STEP;
     handleActions();
     if (screen === SCREEN_TITLE) {

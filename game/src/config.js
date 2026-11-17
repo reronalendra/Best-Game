@@ -24,6 +24,46 @@ export const PLAYER = {
   pickupRadius: 26,
 };
 
+/**
+ * The eight waves, in order. Each row is the spawn mix for that wave and how
+ * fast its queue feeds in; wave 8 is the Gloom Warden boss. Tuning chosen
+ * here, in this session, after brainstorming the pacing with the team:
+ * early waves teach one foe at a time, the middle waves mix them, and the
+ * last two waves are dense on purpose.
+ */
+export const WAVE_CONFIG = [
+  { mote: 12, wisp: 0, brute: 0, boss: 0, spawnInterval: 1.2 },
+  { mote: 18, wisp: 4, brute: 0, boss: 0, spawnInterval: 1.0 },
+  { mote: 22, wisp: 8, brute: 1, boss: 0, spawnInterval: 0.9 },
+  { mote: 28, wisp: 10, brute: 3, boss: 0, spawnInterval: 0.8 },
+  { mote: 35, wisp: 14, brute: 4, boss: 0, spawnInterval: 0.7 },
+  { mote: 40, wisp: 18, brute: 6, boss: 0, spawnInterval: 0.6 },
+  { mote: 50, wisp: 22, brute: 8, boss: 0, spawnInterval: 0.5 },
+  { mote: 15, wisp: 8, brute: 2, boss: 1, spawnInterval: 1.1 },
+];
+
+/** Combo-driven lantern light: radius grows with the combo, smoothly. */
+export const LIGHT = {
+  baseRadius: 220,
+  maxBonus: 120,
+  // Darkness is a mood, not a blindfold: foes outside the lantern must
+  // stay readable. Tuned down after a visual check of the screenshots.
+  darkness: 0.55,
+  enrageDarkness: 0.68,
+  comboWindow: 3.5,
+  maxMultiplier: 3.0,
+};
+
+/** Game feel: tiered shake magnitudes and freeze-frame lengths. */
+export const JUICE = {
+  shakeShoot: 0.12,
+  shakeHit: 0.45,
+  shakeNova: 1.0,
+  shakeBossDeath: 1.0,
+  freezeSmall: 0.05,
+  freezeBig: 0.1,
+};
+
 export const NOVA = {
   embersNeeded: 12,
   radius: 260,
@@ -37,8 +77,11 @@ export const ENEMY = {
   warden: { radius: 46, hp: 60, speed: 42, damage: 2, score: 2000, embers: 12, shootInterval: 1.8, bulletSpeed: 220 },
 };
 
-export const COMBO_WINDOW = 3;
-export const POOL = { enemies: 48, bullets: 96, enemyBullets: 64, embers: 48, particles: 256 };
+export const COMBO_WINDOW = 3.5;
+export const POOL = { enemies: 64, bullets: 128, enemyBullets: 96, embers: 64, particles: 512 };
+
+/** Spatial hash cell size for collision queries (see world.js). */
+export const HASH_CELL = 120;
 
 export const PALETTE = {
   backdrop: '#0b0e1a',
@@ -78,4 +121,21 @@ export const UPGRADES = [
   { id: 'dash', name: 'Glimmer Dash', desc: 'Dash recharges 40% faster', apply: (p) => { p.dashCooldown *= 0.6; } },
   { id: 'pierce', name: 'Piercing Light', desc: 'Bolts pass through +1 foe', apply: (p) => { p.pierce += 1; } },
   { id: 'nova', name: 'Bright Nova', desc: 'Nova needs 4 fewer embers', apply: (p) => { p.novaNeeded = Math.max(4, p.novaNeeded - 4); } },
+  { id: 'lumen', name: 'Lumen Intensity', desc: '+25% damage, +45 light radius', apply: (p) => { p.damageBonus += 0.25; p.lightBonus += 45; } },
+  { id: 'combo', name: 'Combo Keeper', desc: 'Combo lasts +1.5s, cap +1.0x', apply: (p) => { p.comboWindow += 1.5; p.maxMultiplier += 1.0; } },
 ];
+
+/** Transparent PNG sprite files under game/assets/, drawn by the renderer. */
+export const SPRITES = {
+  keeper: 'assets/keeper.png',
+  mote: 'assets/mote.png',
+  wisp: 'assets/wisp.png',
+  brute: 'assets/brute.png',
+  warden: 'assets/warden.png',
+  ember: 'assets/ember.png',
+  tile: 'assets/tile.png',
+  iconLumen: 'assets/icon-lumen.png',
+  iconDash: 'assets/icon-dash.png',
+  iconNova: 'assets/icon-nova.png',
+  iconCombo: 'assets/icon-combo.png',
+};

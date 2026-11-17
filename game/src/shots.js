@@ -72,7 +72,8 @@ export function stageShot(name, world) {
     const py = 380;
     s.player.x = px; s.player.y = py; s.player.aim = -Math.PI * 0.75;
     s.player.embers = 5;
-    s.score = 560; s.combo = 7; s.comboTimer = 2;
+    s.score = 560; s.combo = 7; s.comboTimer = 2; s.comboMult = 1.2;
+    s.lightRadius = 260; s.lightTarget = 260;
     world.spawnAt('mote', px - 260, py - 150);
     world.spawnAt('mote', px + 240, py - 180);
     world.spawnAt('wisp', px - 300, py + 130);
@@ -101,7 +102,8 @@ export function stageShot(name, world) {
     let placed = 0;
     for (const e of s.enemies) {
       if (!e.active) continue;
-      if (e.kind === 'warden') { warden = e; e.x = 640; e.y = 210; e.hp = 38; }
+      // Boss below half health, so the shot shows the enraged phase.
+      if (e.kind === 'warden') { warden = e; e.x = 640; e.y = 210; e.hp = 28; e.enraged = true; s.bossEnraged = true; }
       else if (placed < 4) { e.x = 380 + placed * 170; e.y = 300 + (placed % 2) * 90; placed += 1; }
       else e.active = false;
     }
