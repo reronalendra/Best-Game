@@ -42,12 +42,16 @@ your lantern.
   collisions (squared distances, no `sqrt` in the hot loop), and
   offscreen-canvas lighting (`destination-out`) with no WebGL shader.
 - **Art** — real transparent PNG sprites under `game/assets/`
-  (keeper, mote, wisp, brute, warden, ember, floor tile, upgrade
-  icons), generated in this repo by `tools/generate_assets.py` in one
-  shared dark-bioluminescent palette. Transparency is verified from
-  the PNG alpha channel; the renderer falls back to drawn shapes if a
-  sprite has not loaded yet.
-- **Sound** — synthesised WebAudio effects, no audio files, no network.
+  (keeper, mote, wisp, brute, warden, ember, floor tile, heart for
+  lives, and one icon per upgrade/skill), generated in this repo by
+  `tools/generate_assets.py` in one shared dark-bioluminescent palette.
+  Transparency is verified from the PNG alpha channel; the renderer
+  falls back to drawn shapes if a sprite has not loaded yet.
+- **Sound** — synthesised WebAudio effects plus a procedural dark
+  ambient music loop (slow pad + soft arpeggio, no audio files, no
+  network). Music starts when the game starts, loops seamlessly, and
+  is muted with **M** or the ♪ button in the HUD; if WebAudio is
+  unavailable the game plays on silently.
 
 ## Credits
 

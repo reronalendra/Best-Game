@@ -15,8 +15,13 @@ export const SCREEN_WIN = 'win';
 const PANEL = { width: 640, top: 150, line: 32, bottom: 76 };
 
 const UPGRADE_ICONS = {
-  lumen: 'iconLumen', dash: 'iconDash', nova: 'iconNova', combo: 'iconCombo',
+  rapid: 'iconRapid', twin: 'iconTwin', swift: 'iconSwift', wick: 'iconWick',
+  magnet: 'iconMagnet', dash: 'iconDash', pierce: 'iconPierce', nova: 'iconNova',
+  lumen: 'iconLumen', combo: 'iconCombo',
 };
+
+/** On-screen mute button (field coordinates): M key does the same. */
+export const MUTE_BUTTON = { x: FIELD.width - 52, y: 96, w: 28, h: 28 };
 
 export function createRenderer(canvas, particles, assets) {
   const context = canvas.getContext('2d');
@@ -218,11 +223,22 @@ export function createRenderer(canvas, particles, assets) {
     text(`Best ${Math.max(best, state.score)}`, 24, 48, 18, PALETTE.muted, 'left', 'top');
     text(`Wave ${state.wave} / ${FINAL_WAVE}`, FIELD.width / 2, 18, 26, PALETTE.text, 'center', 'top');
     if (state.combo > 1) text(`Combo x${state.combo} · ${(state.comboMult || 1).toFixed(1)}x light`, FIELD.width / 2, 48, 20, PALETTE.ember, 'center', 'top');
-    // Hearts, top right.
+    // Hearts (transparent PNG), top right; empty hearts are dimmed.
     for (let i = 0; i < p.maxHp; i += 1) {
       const x = FIELD.width - 24 - (p.maxHp - i) * 30;
-      circle(x, 32, 11, i < p.hp ? PALETTE.hp : '#2a3040');
+      context.globalAlpha = i < p.hp ? 1 : 0.22;
+      if (!assets || !assets.draw(context, 'heart', x, 32, 26)) {
+        circle(x, 32, 11, i < p.hp ? PALETTE.hp : '#2a3040');
+      }
+      context.globalAlpha = 1;
     }
+    // Mute button, top right under the lantern meter: click it or press M.
+    context.fillStyle = PALETTE.panel;
+    context.fillRect(MUTE_BUTTON.x, MUTE_BUTTON.y, MUTE_BUTTON.w, MUTE_BUTTON.h);
+    context.strokeStyle = PALETTE.panelEdge;
+    context.lineWidth = 2;
+    context.strokeRect(MUTE_BUTTON.x, MUTE_BUTTON.y, MUTE_BUTTON.w, MUTE_BUTTON.h);
+    text(muted ? '✕' : '♪', MUTE_BUTTON.x + MUTE_BUTTON.w / 2, MUTE_BUTTON.y + 20, 18, muted ? PALETTE.danger : PALETTE.ember, 'center', 'top');
     // Ember lantern meter.
     const mw = 180;
     const mx = FIELD.width - 24 - mw;
@@ -234,7 +250,7 @@ export function createRenderer(canvas, particles, assets) {
     // Dash cooldown.
     const dc = p.dashCooldown <= 0 ? 'Dash ready — Shift' : `Dash ${p.dashCooldown.toFixed(1)}s`;
     text(dc, 24, FIELD.height - 30, 16, p.dashCooldown <= 0 ? PALETTE.muted : '#5b6480', 'left', 'top');
-    text('WASD move · Mouse aim · Click/Space shoot · E nova · P pause' + (muted ? ' · Muted' : ''), FIELD.width - 24, FIELD.height - 30, 16, '#5b6480', 'right', 'top');
+    text('WASD move · Mouse aim · Click/Space shoot · E nova · P pause · M music' + (muted ? ' · Muted' : ''), FIELD.width - 24, FIELD.height - 30, 16, '#5b6480', 'right', 'top');
   }
 
   function drawPanel(title, lines, prompt) {
@@ -253,9 +269,9 @@ export function createRenderer(canvas, particles, assets) {
     text(prompt, FIELD.width / 2, y + height - 38, 23, PALETTE.ember, 'center');
   }
 
-  function drawUpgrade(state) {
+  function drawUpgrade(state, muted) {
     drawField(state, 0);
-    drawHud(state, state.best, false);
+    drawHud(state, state.best, muted);
     context.fillStyle = 'rgba(11, 14, 26, 0.72)';
     context.fillRect(0, 0, FIELD.width, FIELD.height);
     text(`Wave ${state.wave} cleared!`, FIELD.width / 2, 110, 40, PALETTE.text, 'center');
@@ -292,13 +308,14 @@ export function createRenderer(canvas, particles, assets) {
     const shake = mag > 0 ? (Math.random() - 0.5) * 16 * mag : 0;
     const shakeY = mag > 0 ? (Math.random() - 0.5) * 16 * mag : 0;
     context.setTransform(view.scale, 0, 0, view.scale, view.x + shake * view.scale, view.y + shakeY * view.scale);
-    if (screen === SCREEN_UPGRADE) { drawUpgrade(state); return; }
+    if (screen === SCREEN_UPGRADE) { drawUpgrade(state, muted); return; }
     drawField(state, time);
     if (screen === SCREEN_TITLE) {
       drawPanel('LUMENKEEPER', [
         'Keep the lantern lit. The Gloom is coming.',
         'WASD / arrows to move · Mouse to aim · Click or Space to shoot',
         'Shift to dash · E for a Nova when the lantern is full · P to pause',
+        'M or the ♪ button mutes the music & effects',
         `Survive all ${FINAL_WAVE} waves and defeat the Gloom Warden.`,
         `Best score ${best}`,
         'A Lumenkeeper Team game · art, code & sound by the team',

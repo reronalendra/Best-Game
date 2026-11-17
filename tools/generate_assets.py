@@ -173,9 +173,76 @@ def icon_combo(d):
     d.rectangle([22, 20, 26, 28], fill=AMBER_HI)
 
 
+def heart():
+    # Heart icon for lives (nyawa): warm rose heart, amber highlight.
+    img, d = new(48, 48)
+    d.ellipse([6, 10, 24, 28], fill=LAVA)
+    d.ellipse([24, 10, 42, 28], fill=LAVA)
+    d.polygon([(6, 20), (42, 20), (24, 44)], fill=LAVA)
+    d.ellipse([12, 14, 20, 22], fill=(255, 180, 190, 255))
+    d.ellipse([26, 14, 34, 22], fill=(255, 180, 190, 255))
+    save(img, "heart.png")
+
+
+def icon_rapid(d):
+    # Rapid Lantern: three fast bolts fanning out.
+    for i, (x0, y0, x1, y1) in enumerate([(12, 36, 20, 12), (24, 38, 24, 10), (36, 36, 28, 12)]):
+        d.line([(x0, y0), (x1, y1)], fill=AMBER if i != 1 else AMBER_HI, width=4)
+    d.ellipse([20, 6, 28, 14], fill=AMBER_HI)
+
+
+def icon_twin(d):
+    # Twin Flame: two flames side by side.
+    for cx in (17, 31):
+        d.polygon([(cx, 12), (cx + 6, 24), (cx + 4, 32), (cx - 4, 32), (cx - 6, 24)], fill=AMBER)
+        d.polygon([(cx, 20), (cx + 3, 27), (cx - 3, 27)], fill=AMBER_HI)
+
+
+def icon_swift(d):
+    # Swift Boots: a boot with motion lines.
+    d.polygon([(14, 20), (26, 20), (26, 34), (34, 34), (34, 38), (14, 38)], fill=CYAN)
+    d.line([(10, 24), (6, 24)], fill=(224, 242, 254, 255), width=3)
+    d.line([(10, 30), (5, 30)], fill=(224, 242, 254, 255), width=3)
+    d.line([(10, 36), (6, 36)], fill=(224, 242, 254, 255), width=3)
+
+
+def icon_wick(d):
+    # Thick Wick: a candle with a tall flame, healing cross glow.
+    d.rectangle([20, 26, 28, 38], fill=AMBER_HI)
+    d.polygon([(24, 10), (30, 22), (24, 26), (18, 22)], fill=AMBER)
+    d.rectangle([22, 16, 26, 20], fill=WHITE)
+    d.rectangle([14, 34, 18, 38], fill=LAVA)
+    d.rectangle([30, 34, 34, 38], fill=LAVA)
+
+
+def icon_magnet(d):
+    # Ember Magnet: a horseshoe magnet pulling embers in.
+    d.arc([10, 10, 38, 38], 180, 360, fill=(244, 114, 182, 255), width=7)
+    d.rectangle([10, 24, 17, 32], fill=PINK)
+    d.rectangle([31, 24, 38, 32], fill=PINK)
+    d.ellipse([21, 30, 27, 36], fill=AMBER_HI)
+    d.ellipse([14, 36, 18, 40], fill=AMBER)
+    d.ellipse([30, 36, 34, 40], fill=AMBER)
+
+
+def icon_pierce(d):
+    # Piercing Light: one bolt passing through two rings.
+    d.line([(8, 24), (40, 24)], fill=AMBER_HI, width=4)
+    d.polygon([(40, 24), (32, 19), (32, 29)], fill=AMBER_HI)
+    d.ellipse([14, 16, 24, 32], outline=CYAN, width=3)
+    d.ellipse([26, 16, 36, 32], outline=VIOLET, width=3)
+
+
 keeper(); mote(); wisp(); brute(); warden(); ember(); tile()
+heart()
 icon("icon-lumen.png", icon_lumen)
 icon("icon-dash.png", icon_dash)
 icon("icon-nova.png", icon_nova)
 icon("icon-combo.png", icon_combo)
+icon("icon-rapid.png", icon_rapid)
+icon("icon-twin.png", icon_twin)
+icon("icon-swift.png", icon_swift)
+icon("icon-wick.png", icon_wick)
+icon("icon-magnet.png", icon_magnet)
+icon("icon-pierce.png", icon_pierce)
 print("done")

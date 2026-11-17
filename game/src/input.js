@@ -83,5 +83,7 @@ export function createInput(canvas) {
     get firing() { return firing || spaceHeld; },
     takeActions() { const taken = actions; actions = 0; return taken; },
     takePick() { const taken = pick; pick = 0; return taken; },
+    /** Drop a held shot (used when a click lands on the mute button). */
+    clearFiring() { firing = false; spaceHeld = false; },
   };
 }

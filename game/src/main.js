@@ -14,7 +14,7 @@ import { ACTION_CONFIRM, ACTION_DASH, ACTION_MUTE, ACTION_NOVA, ACTION_PAUSE, cr
 import { createAudio } from './audio.js';
 import { createAssets } from './assets.js';
 import { createParticles } from './particles.js';
-import { createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE, SCREEN_UPGRADE, SCREEN_WIN } from './render.js';
+import { MUTE_BUTTON, createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE, SCREEN_UPGRADE, SCREEN_WIN } from './render.js';
 import { stageShot } from './shots.js';
 
 const MAX_FRAME = 0.25;
@@ -76,6 +76,7 @@ function runGame() {
 
   function startGame() {
     audio.unlock();
+    audio.startMusic();
     world.reset();
     world.startWave(1);
     screen = SCREEN_PLAY;
@@ -118,6 +119,17 @@ function runGame() {
   function handleActions() {
     const actions = input.takeActions();
     if (actions & ACTION_MUTE) audio.toggleMute();
+    // On-screen mute button (HUD, every screen but the title): a click on
+    // it toggles the music/effects and must not also start or shoot.
+    if ((actions & ACTION_CONFIRM) && screen !== SCREEN_TITLE) {
+      const a = input.aim;
+      if (a.x >= MUTE_BUTTON.x && a.x <= MUTE_BUTTON.x + MUTE_BUTTON.w
+        && a.y >= MUTE_BUTTON.y && a.y <= MUTE_BUTTON.y + MUTE_BUTTON.h) {
+        audio.toggleMute();
+        input.clearFiring();
+        return;
+      }
+    }
     // Dash and nova are one-shot requests for the next simulation step.
     if (actions & ACTION_DASH) pendingDash = true;
     if (actions & ACTION_NOVA) pendingNova = true;
